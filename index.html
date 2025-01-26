@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Progreso y Blog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #444;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .actions button {
+            padding: 5px 10px;
+            margin-right: 5px;
+            font-size: 14px;
+        }
+
+        .actions button.edit {
+            background-color: #ffc107;
+        }
+
+        .actions button.delete {
+            background-color: #dc3545;
+        }
+
+        .blog-entry {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        .blog-entry h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Monitor de Progreso en Juegos Móviles</h1>
+
+        <!-- Formulario para agregar/editar aplicaciones -->
+        <form id="appForm">
+            <input type="text" id="appName" placeholder="Nombre de la App" required>
+            <select id="appType" required>
+                <option value="">Selecciona el tipo</option>
+                <option value="Paga">Paga</option>
+                <option value="Gratis">Gratis</option>
+                <option value="Pendiente">Pendiente</option>
+            </select>
+            <textarea id="appProgress" placeholder="Progreso y detalles" required></textarea>
+            <textarea id="appReason" placeholder="Razón para abandonar (si aplica)"></textarea>
+            <button type="submit">Guardar</button>
+        </form>
+
+        <!-- Tabla para mostrar las aplicaciones -->
+        <table id="appTable">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Progreso</th>
+                    <th>Razón para Abandonar</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se generarán dinámicamente con JavaScript -->
+            </tbody>
+        </table>
+
+        <h2>Blog de Avances</h2>
+
+        <!-- Formulario para agregar/editar entradas del blog -->
+        <form id="blogForm">
+            <input type="text" id="blogTitle" placeholder="Título de la entrada" required>
+            <textarea id="blogContent" placeholder="Contenido de la entrada" required></textarea>
+            <button type="submit">Publicar</button>
+        </form>
+
+        <!-- Lista de entradas del blog -->
+        <div id="blogEntries">
+            <!-- Las entradas se generarán dinámicamente con JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const appForm = document.getElementById("appForm");
+            const blogForm = document.getElementById("blogForm");
+            const tableBody = document.querySelector("#appTable tbody");
+            const blogEntries = document.getElementById("blogEntries");
+            let editAppIndex = null;
+            let editBlogIndex = null;
+
+            // Cargar datos desde el archivo JSON (simulado aquí)
+            let data = {
+                apps: [],
+                blog: []
+            };
+
+            // Simulación de lectura de un archivo JSON
+            function loadData() {
+                const jsonData = localStorage.getItem("data");
+                if (jsonData) {
+                    data = JSON.parse(jsonData);
+                }
+            }
+
+            // Simulación de guardado en un archivo JSON
+            function saveData() {
+                localStorage.setItem("data", JSON.stringify(data));
+            }
+
+            // Renderizar la tabla de aplicaciones
+            function renderApps() {
+                tableBody.innerHTML = "";
+                data.apps.forEach((app, index) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${app.name}</td>
+                        <td>${app.type}</td>
+                        <td>${app.progress}</td>
+                        <td>${app.reason || "N/A"}</td>
+                        <td class="actions">
+                            <button class="edit" onclick="editApp(${index})">Editar</button>
+                            <button class="delete" onclick="deleteApp(${index})">Eliminar</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Renderizar las entradas del blog
+            function renderBlog() {
+                blogEntries.innerHTML = "";
+                data.blog.forEach((entry, index) => {
+                    const entryDiv = document.createElement("div");
+                    entryDiv.className = "blog-entry";
+                    entryDiv.innerHTML = `
+                        <h3>${entry.title}</h3>
+                        <p>${entry.content}</p>
+                        <button class="edit" onclick="editBlog(${index})">Editar</button>
+                        <button class="delete" onclick="deleteBlog(${index})">Eliminar</button>
+                    `;
+                    blogEntries.appendChild(entryDiv);
+                });
+            }
+
+            // Función para agregar/editar una aplicación
+            appForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const appData = {
+                    name: document.getElementById("appName").value,
+                    type: document.getElementById("appType").value,
+                    progress: document.getElementById("appProgress").value,
+                    reason: document.getElementById("appReason").value,
+                };
+
+                if (editAppIndex !== null) {
+                    // Editar aplicación existente
+                    data.apps[editAppIndex] = appData;
+                    editAppIndex = null;
+                } else {
+                    // Agregar nueva aplicación
+                    data.apps.push(appData);
+                }
+
+                saveData();
+                renderApps();
+                appForm.reset();
+            });
+
+            // Función para agregar/editar una entrada del blog
+            blogForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const blogData = {
+                    title: document.getElementById("blogTitle").value,
+                    content: document.getElementById("blogContent").value,
+                };
+
+                if (editBlogIndex !== null) {
+                    // Editar entrada existente
+                    data.blog[editBlogIndex] = blogData;
+                    editBlogIndex = null;
+                } else {
+                    // Agregar nueva entrada
+                    data.blog.push(blogData);
+                }
+
+                saveData();
+                renderBlog();
+                blogForm.reset();
+            });
+
+            // Función para editar una aplicación
+            window.editApp = (index) => {
+                const app = data.apps[index];
+                document.getElementById("appName").value = app.name;
+                document.getElementById("appType").value = app.type;
+                document.getElementById("appProgress").value = app.progress;
+                document.getElementById("appReason").value = app.reason;
+                editAppIndex = index;
+            };
+
+            // Función para eliminar una aplicación
+            window.deleteApp = (index) => {
+                if (confirm("¿Estás seguro de eliminar esta aplicación?")) {
+                    data.apps.splice(index, 1);
+                    saveData();
+                    renderApps();
+                }
+            };
+
+            // Función para editar una entrada del blog
+            window.editBlog = (index) => {
+                const entry = data.blog[index];
+                document.getElementById("blogTitle").value = entry.title;
+                document.getElementById("blogContent").value = entry.content;
+                editBlogIndex = index;
+            };
+
+            // Función para eliminar una entrada del blog
+            window.deleteBlog = (index) => {
+                if (confirm("¿Estás seguro de eliminar esta entrada del blog?")) {
+                    data.blog.splice(index, 1);
+                    saveData();
+                    renderBlog();
+                }
+            };
+
+            // Cargar datos y renderizar al inicio
+            loadData();
+            renderApps();
+            renderBlog();
+        });
+    </script>
+</body>
+</html>
